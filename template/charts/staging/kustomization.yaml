@@ -1,0 +1,15 @@
+configMapGenerator:
+  - name: <name>
+    files:
+      - appsettings.json
+generatorOptions:
+  disableNameSuffixHash: true
+patchesJson6902:
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: Ingress
+      name: <name>
+    path: ingress_patch.yaml
+bases:
+  - ../base

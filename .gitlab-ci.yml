@@ -1,0 +1,26 @@
+stages:
+  - release
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: always
+    - when: never
+
+release:nuget:
+  stage: release
+  image: mcr.microsoft.com/dotnet/sdk:5.0
+  script:
+    - sed -i "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>$CI_COMMIT_TAG<\/PackageVersion>/" Template.fsproj
+    - dotnet pack -o out
+    - dotnet nuget push out/* -k $CI_JOB_TOKEN -s gitlab
+
+release:register:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  script:
+    - env
+  release:
+    tag_name: '$CI_COMMIT_TAG'
+    name: 'Release $CI_COMMIT_TAG'
+    description: RELEASE_NOTES.md

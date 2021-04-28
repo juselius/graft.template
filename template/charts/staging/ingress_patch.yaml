@@ -1,0 +1,21 @@
+# - op: replace
+#   path: /spec/rules/0/http/paths/0/path
+#   value:
+#     path: /app
+
+# - op: add
+#   path: /spec/rules/-
+#   value:
+#     host: REPLACE_ME.k2.itpartner.no
+#     http:
+#       paths:
+#        - path: /
+#          pathType: Prefix
+#          backend:
+#            service:
+#              name: <name>
+#              port:
+#                number: 80
+# - op: add
+#   path: /spec/tls/0/hosts/-
+#   value: REPLACE_ME.k2.itpartner.no

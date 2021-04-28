@@ -1,0 +1,41 @@
+name: Build release
+
+
+env:
+  target: release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Restore NuGet
+      uses: actions/cache@v1
+      with:
+        path: ~/.nuget
+        key: ${{ runner.os }}-cache-nuget-${{ hashFiles('*/*/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-cache-nuget-
+    
+    - name: Install dependencies
+      run: | 
+        dotnet tool restore
+    
+    - name: Set release version
+      run: |
+        echo ${{ github.event.release.tag_name }}
+        sed "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>${{ github.event.release.tag_name }}<\/PackageVersion>/" ./Templates.fsproj > ./Templates.fsproj.tmp
+        mv ./Templates.fsproj.tmp ./Templates.fsproj
+    
+    - name: Pack and publish
+      run: |
+        dotnet pack -c Release ./Templates.fsproj -o .
+        sed "s/API_TOKEN/${{ secrets.SERIT_API_TOKEN }}/g" ./nuget.config > nuget.config.tmp
+        mv nuget.config.tmp nuget.config
+        dotnet nuget push ./*.nupkg -s "github" --skip-duplicate

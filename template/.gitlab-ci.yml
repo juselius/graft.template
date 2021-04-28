@@ -1,0 +1,8 @@
+variables:
+  DEPLOY_NAMESPACE: default
+
+include:
+  - project: serit/gitlab-ci
+    ref: 1.7.1
+    file: gitlab-ci-template.yml
+
