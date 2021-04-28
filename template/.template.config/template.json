@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "Jonas Juselius",
+    "classifications": [ "Web", "MVU", "Feliz" ],
+    "identity": "Graft",
+    "name": "Graft client-server starter",
+    "shortName": "graft",
+    "tags": {
+      "language": "F#",
+      "type": "project"
+    },
+    "guids": [
+		"00000000-0000-0000-0000-000000000000",
+		"00000000-0000-0000-0000-000000000001",
+		"00000000-0000-0000-0000-000000000002",
+		"10000000-0000-0000-0000-000000000000",
+		"10000000-0000-0000-0000-100000000000",
+		"10000000-0000-0000-0000-200000000000",
+		"10000000-0000-0000-0000-300000000000",
+		"10000000-0000-0000-0000-400000000000",
+		"20000000-0000-0000-0000-000000000000",
+		"20000000-0000-0000-0000-100000000000",
+		"20000000-0000-0000-0000-200000000000",
+		"20000000-0000-0000-0000-300000000000"
+    ],
+    "sourceName": "REPLACE_ME",
+    "preferNameDirectory" : "true",
+    "postActions": [
+        {
+            "actionId": "3A7C4B45-1F5D-4A30-959A-51B88E82B5D2",
+            "args": {
+                "executable": "/bin/sh",
+                "args": "finalize.sh",
+                "redirectStandardOutput": true
+            },
+            "manualInstructions": [{
+                "text": "Run 'finalize.sh'"
+            }],
+            "continueOnError": true,
+            "description ": "finalize setup"
+        }
+    ]
+  }

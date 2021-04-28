@@ -1,0 +1,10 @@
+bin/
+obj/
+.ionide/
+*.nupkg
+node_modules/
+.fake/
+.fable/
+deploy/
+*.lock
+.build/

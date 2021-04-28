@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "REPLACE_ME.fullname" . }}
+  annotations:
+    {{- if .Values.ci.environment }}
+    app.gitlab.com/env: {{ default "" .Values.ci.environment }}
+    app.gitlab.com/app: {{ default "" .Values.ci.projectPath }}
+    {{- end }}
+  labels:
+    {{- include "REPLACE_ME.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "REPLACE_ME.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.ci.environment }}
+        app.gitlab.com/env: {{ default "" .Values.ci.environment }}
+        app.gitlab.com/app: {{ default "" .Values.ci.projectPath }}
+        {{- end }}
+      labels:
+        {{- include "REPLACE_ME.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "REPLACE_ME.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8085
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              {{- if .Values.service.https }}
+              scheme: HTTPS
+              {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              {{- if .Values.service.https }}
+              scheme: HTTPS
+              {{- end }}
+          {{- if .Values.service.https }}
+          env:
+          - name: ASPNETCORE_Kestrel__Certificates__Default__Path
+            value: "/app/tls/kestrel.pfx"
+          - name: SERVER_USE_HTTPS
+            value: "1"
+          {{- else }}
+          env: []
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: data
+            mountPath: /data
+          - name: appsettings
+            mountPath: /app/appsettings.json
+            subPath: appsettings.json
+            readOnly: true
+          {{- if .Values.service.https }}
+          - name: tls-certificates
+            mountPath: /app/tls
+            readOnly: true
+          {{- end }}
+      initContainers:
+      - name: init
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command: [ "/bin/sh", "-c", "true"]
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: appsettings
+          mountPath: /app/appsettings.json
+          subPath: appsettings.json
+          readOnly: true
+      volumes:
+      - name: data
+      {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "REPLACE_ME.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+      - name: appsettings
+        configMap:
+          name: {{ template "REPLACE_ME.fullname" . }}
+      {{- if .Values.service.https }}
+      - name: tls-certificates
+        secret:
+          secretName: {{ .Values.service.secretName }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

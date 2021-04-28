@@ -1,0 +1,64 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "REPLACE_ME.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "REPLACE_ME.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  {{- if .Values.service.https }}
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+  {{- else }}
+    nginx.ingress.kubernetes.io/backend-protocol: HTTP
+  {{- end }}
+  {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  tls:
+  {{- if .Values.ci.deployHost }}
+    - hosts:
+      - {{ .Values.ci.deployHost }}
+      secretName: {{ .Release.Name }}-tls
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  {{- range .Values.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
+  {{- end }}
+  rules:
+  {{- if .Values.ci.deployHost }}
+    - host: {{ .Values.ci.deployHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+  {{- end }}
+  {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+        {{- range .paths }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+        {{- end }}
+  {{- end }}
+{{- end }}
